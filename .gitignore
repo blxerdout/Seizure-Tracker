@@ -39,3 +39,6 @@ yarn-error.log*
 # Backup files
 *.bak
 *.tmp
+
+# Firebase Configuration (contains API keys)
+firebase-config.js

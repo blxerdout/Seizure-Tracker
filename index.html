@@ -5,8 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seizure Tracker</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://w id="appContainer" style="display: none;">
+        <header>
+            <h1>📊 Seizure Tracker</h1>
+            <p>Track and manage seizure events</p>
+            <div class="header-actions">
+                <button id="patientInfoBtn" class="btn btn-outline">Patient Info</button>
+                <button id="signOutBtn" class="btn btn-outline">Sign Out</button>
+            </divjs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <h2 id="authTitle">Sign In</h2>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="displayNameGroup" style="display: none;">
+                    <label for="authDisplayName">Name</label>
+                    <input type="text" id="authDisplayName">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="authSubmitBtn">Sign In</button>
+                </div>
+                <p class="auth-toggle">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <a href="#" id="authToggleLink">Sign Up</a>
+                </p>
+                <div id="authError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Patient Profile Modal -->
+    <div id="patientModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Patient Information</h2>
+            <form id="patientForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="patientName">Full Name *</label>
+                        <input type="text" id="patientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientDOB">Date of Birth *</label>
+                        <input type="date" id="patientDOB" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="patientGender">Gender</label>
+                        <select id="patientGender">
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientMRN">Medical Record Number</label>
+                        <input type="text" id="patientMRN">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="patientDiagnosis">Diagnosis</label>
+                    <input type="text" id="patientDiagnosis" placeholder="e.g., Epilepsy">
+                </div>
+                <div class="form-group">
+                    <label for="patientMedications">Current Medications</label>
+                    <textarea id="patientMedications" rows="2" placeholder="List all medications..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="patientAllergies">Allergies</label>
+                    <input type="text" id="patientAllergies" placeholder="Any known allergies">
+                </div>
+                <div class="form-group">
+                    <label for="patientEmergencyContact">Emergency Contact</label>
+                    <input type="text" id="patientEmergencyContact" placeholder="Name and phone number">
+                </div>
+                <div class="form-group">
+                    <label for="patientDoctor">Primary Doctor</label>
+                    <input type="text" id="patientDoctor" placeholder="Doctor's name and contact">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Patient Info</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="container">
         <header>
             <h1>📊 Seizure Tracker</h1>
@@ -103,7 +199,10 @@
             </div>
             <div id="emptyState" class="empty-state">
                 <p>No seizure events logged yet. Add your first event above.</p>
-            </div>
+            </divfirebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="database.js"></script>
+    <script src=">
         </section>
     </div>
 

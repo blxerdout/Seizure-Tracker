@@ -1,18 +1,47 @@
-// Seizure Tracker App
+// Seizure Tracker App with Firebase
 class SeizureTracker {
     constructor() {
-        this.seizures = this.loadSeizures();
+        this.seizures = [];
         this.editingId = null;
         this.currentVideoFile = null;
+        this.unsubscribeSeizures = null;
+        this.isSignUpMode = false;
+        this.initAuth();
+    }
+
+    // Initialize authentication
+    initAuth() {
+        authHandler.init((user) => {
+            if (user) {
+                this.onUserLoggedIn();
+            } else {
+                this.onUserLoggedOut();
+            }
+        });
+    }
+
+    // User logged in
+    onUserLoggedIn() {
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
         this.initializeApp();
+    }
+
+    // User logged out
+    onUserLoggedOut() {
+        document.getElementById('authModal').style.display = 'flex';
+        document.getElementById('appContainer').style.display = 'none';
+        if (this.unsubscribeSeizures) {
+            this.unsubscribeSeizures();
+        }
     }
 
     // Initialize the application
     initializeApp() {
         this.setDefaultDateTime();
         this.attachEventListeners();
-        this.displaySeizures();
-        this.updateStatistics();
+        this.loadSeizuresFromFirebase();
+        this.loadPatientInfo();
     }
 
     // Set default date and time to current
@@ -27,6 +56,26 @@ class SeizureTracker {
 
     // Attach event listeners
     attachEventListeners() {
+        // Auth form
+        const authForm = document.getElementById('authForm');
+        const authToggleLink = document.getElementById('authToggleLink');
+        const signOutBtn = document.getElementById('signOutBtn');
+        
+        authForm.addEventListener('submit', (e) => this.handleAuth(e));
+        authToggleLink.addEventListener('click', (e) => this.toggleAuthMode(e));
+        signOutBtn.addEventListener('click', () => this.handleSignOut());
+
+        // Patient form
+        const patientForm = document.getElementById('patientForm');
+        const patientInfoBtn = document.getElementById('patientInfoBtn');
+        const patientModal = document.getElementById('patientModal');
+        const closeBtn = patientModal.querySelector('.close');
+        
+        patientForm.addEventListener('submit', (e) => this.handlePatientSubmit(e));
+        patientInfoBtn.addEventListener('click', () => this.showPatientModal());
+        closeBtn.addEventListener('click', () => this.hidePatientModal());
+
+        // Seizure form
         const form = document.getElementById('seizureForm');
         const cancelBtn = document.getElementById('cancelBtn');
         const exportBtn = document.getElementById('exportBtn');
@@ -37,55 +86,162 @@ class SeizureTracker {
         cancelBtn.addEventListener('click', () => this.cancelEdit());
         exportBtn.addEventListener('click', () => this.exportData());
         videoInput.addEventListener('change', (e) => this.handleVideoSelection(e));
+        removeVideoBtn.addEventListener('click', () => this.removeVideo());
+    }
+
+    // Handle authentication
+    async handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        const displayName = document.getElementById('authDisplayName').value;
+        const errorDiv = document.getElementById('authError');
+
+        let result;
+        if (this.isSignUpMode) {
+            result = await authHandler.signUp(email, password, displayName);
+        } else {
+            result = await authHandler.signIn(email, password);
+        }
+
+        if (result.success) {
+            errorDiv.textContent = '';
+            document.getElementById('authForm').reset();
+        } else {
+            errorDiv.textContent = result.error;
+        }
+    }
+
+    // Toggle between sign in and sign up
+    toggleAuthMode(e) {
+        e.preventDefault();
+        this.isSignUpMode = !this.isSignUpMode;
+        
+        const title = document.getElementById('authTitle');
+        const submitBtn = document.getElementById('authSubmitBtn');
+        const toggleText = document.getElementById('authToggleText');
+        const toggleLink = document.getElementById('authToggleLink');
+        const displayNameGroup = document.getElementById('displayNameGroup');
+
+        if (this.isSignUpMode) {
+            title.textContent = 'Sign Up';
+            submitBtn.textContent = 'Sign Up';
+            toggleText.textContent = 'Already have an account?';
+            toggleLink.textContent = 'Sign In';
+            displayNameGroup.style.display = 'block';
+        } else {
+            title.textContent = 'Sign In';
+            submitBtn.textContent = 'Sign In';
+            toggleText.textContent = "Don't have an account?";
+            toggleLink.textContent = 'Sign Up';
+            displayNameGroup.style.display = 'none';
+        }
+    }
+
+    // Handle sign out
+    async handleSignOut() {
+        await authHandler.signOut();
+    }
+
+    // Patient modal management
+    showPatientModal() {
+        document.getElementById('patientModal').style.display = 'flex';
+    }
+
+    hidePatientModal() {
+        document.getElementById('patientModal').style.display = 'none';
+    }
+
+    // Load patient info
+    async loadPatientInfo() {
+        const result = await dbHandler.getPatient();
+        if (result.success && result.data) {
+            const patient = result.data;
+            document.getElementById('patientName').value = patient.name || '';
+            document.getElementById('patientDOB').value = patient.dob || '';
+            document.getElementById('patientGender').value = patient.gender || '';
+            document.getElementById('patientMRN').value = patient.mrn || '';
+            document.getElementById('patientDiagnosis').value = patient.diagnosis || '';
+            document.getElementById('patientMedications').value = patient.medications || '';
+            document.getElementById('patientAllergies').value = patient.allergies || '';
+            document.getElementById('patientEmergencyContact').value = patient.emergencyContact || '';
+            document.getElementById('patientDoctor').value = patient.doctor || '';
+        }
+    }
+
+    // Handle patient form submission
+    async handlePatientSubmit(e) {
+        e.preventDefault();
+
+        const patientData = {
+            name: document.getElementById('patientName').value,
+            dob: document.getElementById('patientDOB').value,
+            gender: document.getElementById('patientGender').value,
+            mrn: document.getElementById('patientMRN').value,
+            diagnosis: document.getElementById('patientDiagnosis').value,
+            medications: document.getElementById('patientMedications').value,
+            allergies: document.getElementById('patientAllergies').value,
+            emergencyContact: document.getElementById('patientEmergencyContact').value,
+            doctor: document.getElementById('patientDoctor').value
+        };
+
+        const result = await dbHandler.savePatient(patientData);
+        if (result.success) {
+            alert('Patient information saved successfully!');
+            this.hidePatientModal();
+        } else {
+            alert('Error saving patient information: ' + result.error);
+        }
+    }
+
+    // Load seizures from Firebase
+    loadSeizuresFromFirebase() {
+        this.unsubscribeSeizures = dbHandler.listenToSeizures((seizures) => {
+            this.seizures = seizures;
+            this.displaySeizures();
+            this.updateStatistics();
+        });
+    }
+
+    // Handle form submission
     async handleFormSubmit(e) {
         e.preventDefault();
 
         const seizureData = {
-            id: this.editingId || Date.now(),
             date: document.getElementById('seizureDate').value,
             time: document.getElementById('seizureTime').value,
             duration: document.getElementById('seizureDuration').value,
             type: document.getElementById('seizureType').value,
             triggers: document.getElementById('seizureTriggers').value,
             notes: document.getElementById('seizureNotes').value,
-            video: null
+            videoUrl: null
         };
 
-        // Handle video upload
+        // Handle video upload to Firebase Storage
         if (this.currentVideoFile) {
-            seizureData.video = await this.convertVideoToBase64(this.currentVideoFile);
-        } else if (this.editingId) {
-            // Preserve existing video when editing
-            const existingSeizure = this.seizures.find(s => s.id === this.editingId);
-            if (existingSeizure && existingSeizure.video) {
-                seizureData.video = existingSeizure.video;
+            const tempId = this.editingId || Date.now().toString();
+            const uploadResult = await dbHandler.uploadVideo(this.currentVideoFile, tempId);
+            if (uploadResult.success) {
+                seizureData.videoUrl = uploadResult.url;
             }
-        }  duration: document.getElementById('seizureDuration').value,
-            type: document.getElementById('seizureType').value,
-            triggers: document.getElementById('seizureTriggers').value,
-            notes: document.getElementById('seizureNotes').value
-        };
+        }
 
+        let result;
         if (this.editingId) {
             // Update existing seizure
-            const index = this.seizures.findIndex(s => s.id === this.editingId);
-            this.seizures[index] = seizureData;
+            result = await dbHandler.updateSeizure(this.editingId, seizureData);
             this.editingId = null;
             this.toggleEditMode(false);
         } else {
             // Add new seizure
-            this.seizures.unshift(seizureData);
+            result = await dbHandler.addSeizure(seizureData);
         }
 
-        this.saveSeizures();
-        this.displaySeizures();
-        this.updateStatistics();
-        // Show existing video if available
-        if (seizure.video) {
-            this.showVideoPreview(seizure.video);
+        if (result.success) {
+            this.resetForm();
+        } else {
+            alert('Error saving seizure: ' + result.error);
         }
-
-        this.resetForm();
     }
 
     // Edit a seizure
@@ -100,6 +256,11 @@ class SeizureTracker {
         document.getElementById('seizureType').value = seizure.type;
         document.getElementById('seizureTriggers').value = seizure.triggers;
         document.getElementById('seizureNotes').value = seizure.notes;
+
+        // Show existing video if available
+        if (seizure.videoUrl) {
+            this.showVideoPreview(seizure.videoUrl);
+        }
 
         this.toggleEditMode(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,12 +288,12 @@ class SeizureTracker {
     }
 
     // Delete a seizure
-    deleteSeizure(id) {
+    async deleteSeizure(id) {
         if (confirm('Are you sure you want to delete this seizure event?')) {
-            this.seizures = this.seizures.filter(s => s.id !== id);
-            this.saveSeizures();
-            this.displaySeizures();
-            this.updateStatistics();
+            const result = await dbHandler.deleteSeizure(id);
+            if (!result.success) {
+                alert('Error deleting seizure: ' + result.error);
+            }
         }
     }
 
@@ -154,11 +315,11 @@ class SeizureTracker {
 
         // Attach event listeners to action buttons
         eventsList.querySelectorAll('[data-action="edit"]').forEach(btn => {
-            btn.addEventListener('click', () => this.editSeizure(parseInt(btn.dataset.id)));
+            btn.addEventListener('click', () => this.editSeizure(btn.dataset.id));
         });
 
         eventsList.querySelectorAll('[data-action="delete"]').forEach(btn => {
-            btn.addEventListener('click', () => this.deleteSeizure(parseInt(btn.dataset.id)));
+            btn.addEventListener('click', () => this.deleteSeizure(btn.dataset.id));
         });
     }
 
@@ -173,15 +334,6 @@ class SeizureTracker {
         });
         const formattedTime = dateObj.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
-                ${seizure.video ? `
-                    <div class="event-video">
-                        <strong>Video Recording:</strong>
-                        <video controls class="event-video-player">
-                            <source src="${seizure.video}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                ` : ''}
             minute: '2-digit' 
         });
 
@@ -203,6 +355,15 @@ class SeizureTracker {
                     ${seizure.triggers ? `<div class="event-detail"><strong>Triggers:</strong> ${seizure.triggers}</div>` : ''}
                 </div>
                 ${seizure.notes ? `<div class="event-notes">${seizure.notes}</div>` : ''}
+                ${seizure.videoUrl ? `
+                    <div class="event-video">
+                        <strong>Video Recording:</strong>
+                        <video controls class="event-video-player">
+                            <source src="${seizure.videoUrl}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -220,7 +381,33 @@ class SeizureTracker {
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
         const thisMonthCount = this.seizures.filter(s => {
-       Handle video selection
+            const seizureDate = new Date(s.date);
+            return seizureDate.getMonth() === currentMonth && seizureDate.getFullYear() === currentYear;
+        }).length;
+        monthEvents.textContent = thisMonthCount;
+
+        // Last event
+        if (this.seizures.length > 0) {
+            const lastSeizure = this.seizures[0];
+            const daysSince = this.getDaysSince(lastSeizure.date);
+            lastEvent.textContent = daysSince === 0 ? 'Today' : `${daysSince}d ago`;
+        } else {
+            lastEvent.textContent = 'None';
+        }
+    }
+
+    // Calculate days since a date
+    getDaysSince(dateString) {
+        const seizureDate = new Date(dateString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        seizureDate.setHours(0, 0, 0, 0);
+        const diffTime = today - seizureDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    }
+
+    // Handle video selection
     handleVideoSelection(event) {
         const file = event.target.files[0];
         if (file && file.type.startsWith('video/')) {
@@ -251,58 +438,11 @@ class SeizureTracker {
         previewContainer.style.display = 'none';
     }
 
-    // Convert video to base64
-    convertVideoToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }
-
     // Reset form
     resetForm() {
         document.getElementById('seizureForm').reset();
         this.setDefaultDateTime();
-        this.removeVideo = thisMonthCount;
-
-        // Last event
-        if (this.seizures.length > 0) {
-            const lastSeizure = this.seizures[0];
-            const daysSince = this.getDaysSince(lastSeizure.date);
-            lastEvent.textContent = daysSince === 0 ? 'Today' : `${daysSince}d ago`;
-        } else {
-            lastEvent.textContent = 'None';
-        }
-    }
-
-    // Calculate days since a date
-    getDaysSince(dateString) {
-        const seizureDate = new Date(dateString);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        seizureDate.setHours(0, 0, 0, 0);
-        const diffTime = today - seizureDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    }
-
-    // Reset form
-    resetForm() {
-        document.getElementById('seizureForm').reset();
-        this.setDefaultDateTime();
-    }
-
-    // Save seizures to localStorage
-    saveSeizures() {
-        localStorage.setItem('seizures', JSON.stringify(this.seizures));
-    }
-
-    // Load seizures from localStorage
-    loadSeizures() {
-        const stored = localStorage.getItem('seizures');
-        return stored ? JSON.parse(stored) : [];
+        this.removeVideo();
     }
 
     // Export data as JSON

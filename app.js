@@ -5,7 +5,6 @@ class SeizureTracker {
         this.editingId = null;
         this.currentVideoFile = null;
         this.unsubscribeSeizures = null;
-        this.isSignUpMode = false;
         this.initAuth();
     }
 
@@ -15,25 +14,20 @@ class SeizureTracker {
             if (user) {
                 this.onUserLoggedIn();
             } else {
-                this.onUserLoggedOut();
+                // Redirect to login page
+                window.location.href = 'login.html';
             }
         });
     }
 
     // User logged in
     onUserLoggedIn() {
-        document.getElementById('authModal').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
         this.initializeApp();
     }
 
-    // User logged out
+    // User logged out - redirect to login
     onUserLoggedOut() {
-        document.getElementById('authModal').style.display = 'flex';
-        document.getElementById('appContainer').style.display = 'none';
-        if (this.unsubscribeSeizures) {
-            this.unsubscribeSeizures();
-        }
+        window.location.href = 'login.html';
     }
 
     // Initialize the application
@@ -56,13 +50,8 @@ class SeizureTracker {
 
     // Attach event listeners
     attachEventListeners() {
-        // Auth form
-        const authForm = document.getElementById('authForm');
-        const authToggleLink = document.getElementById('authToggleLink');
+        // Sign out button
         const signOutBtn = document.getElementById('signOutBtn');
-        
-        authForm.addEventListener('submit', (e) => this.handleAuth(e));
-        authToggleLink.addEventListener('click', (e) => this.toggleAuthMode(e));
         signOutBtn.addEventListener('click', () => this.handleSignOut());
 
         // Patient form
@@ -89,58 +78,12 @@ class SeizureTracker {
         removeVideoBtn.addEventListener('click', () => this.removeVideo());
     }
 
-    // Handle authentication
-    async handleAuth(e) {
-        e.preventDefault();
-        const email = document.getElementById('authEmail').value;
-        const password = document.getElementById('authPassword').value;
-        const displayName = document.getElementById('authDisplayName').value;
-        const errorDiv = document.getElementById('authError');
-
-        let result;
-        if (this.isSignUpMode) {
-            result = await authHandler.signUp(email, password, displayName);
-        } else {
-            result = await authHandler.signIn(email, password);
-        }
-
-        if (result.success) {
-            errorDiv.textContent = '';
-            document.getElementById('authForm').reset();
-        } else {
-            errorDiv.textContent = result.error;
-        }
-    }
-
-    // Toggle between sign in and sign up
-    toggleAuthMode(e) {
-        e.preventDefault();
-        this.isSignUpMode = !this.isSignUpMode;
-        
-        const title = document.getElementById('authTitle');
-        const submitBtn = document.getElementById('authSubmitBtn');
-        const toggleText = document.getElementById('authToggleText');
-        const toggleLink = document.getElementById('authToggleLink');
-        const displayNameGroup = document.getElementById('displayNameGroup');
-
-        if (this.isSignUpMode) {
-            title.textContent = 'Sign Up';
-            submitBtn.textContent = 'Sign Up';
-            toggleText.textContent = 'Already have an account?';
-            toggleLink.textContent = 'Sign In';
-            displayNameGroup.style.display = 'block';
-        } else {
-            title.textContent = 'Sign In';
-            submitBtn.textContent = 'Sign In';
-            toggleText.textContent = "Don't have an account?";
-            toggleLink.textContent = 'Sign Up';
-            displayNameGroup.style.display = 'none';
-        }
-    }
-
     // Handle sign out
     async handleSignOut() {
-        await authHandler.signOut();
+        if (confirm('Are you sure you want to sign out?')) {
+            await authHandler.signOut();
+            // Will be redirected by onUserLoggedOut
+        }
     }
 
     // Patient modal management

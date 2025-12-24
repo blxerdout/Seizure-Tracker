@@ -7,12 +7,45 @@
     <link rel="stylesheet" href="styles.css">
     
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://w id="appContainer" style="display: none;">
+        <header>
+            <h1>📊 Seizure Tracker</h1>
+            <p>Track and manage seizure events</p>
+            <div class="header-actions">
+                <button id="patientInfoBtn" class="btn btn-outline">Patient Info</button>
+                <button id="signOutBtn" class="btn btn-outline">Sign Out</button>
+            </divjs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <h2 id="authTitle">Sign In</h2>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="displayNameGroup" style="display: none;">
+                    <label for="authDisplayName">Name</label>
+                    <input type="text" id="authDisplayName">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="authSubmitBtn">Sign In</button>
+                </div>
+                <p class="auth-toggle">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <a href="#" id="authToggleLink">Sign Up</a>
+                </p>
+                <div id="authError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
     <!-- Patient Profile Modal -->
     <div id="patientModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -70,15 +103,10 @@
             </form>
         </div>
     </div>
-
-    <div class="container" id="appContainer">
+    <div class="container">
         <header>
             <h1>📊 Seizure Tracker</h1>
             <p>Track and manage seizure events</p>
-            <div class="header-actions">
-                <button id="patientInfoBtn" class="btn btn-outline">Patient Info</button>
-                <button id="signOutBtn" class="btn btn-outline">Sign Out</button>
-            </div>
         </header>
 
         <!-- Statistics Section -->
@@ -171,13 +199,13 @@
             </div>
             <div id="emptyState" class="empty-state">
                 <p>No seizure events logged yet. Add your first event above.</p>
-            </div>
+            </divfirebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="database.js"></script>
+    <script src=">
         </section>
     </div>
 
-    <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
-    <script src="database.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

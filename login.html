@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seizure Tracker - Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>📊 Seizure Tracker</h1>
+                <p>Track and manage seizure events securely</p>
+            </div>
+
+            <div class="login-form-container">
+                <h2 id="authTitle">Sign In</h2>
+                
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="authEmail">Email Address</label>
+                        <input type="email" id="authEmail" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authPassword">Password</label>
+                        <input type="password" id="authPassword" placeholder="Enter your password" required>
+                    </div>
+
+                    <div class="form-group" id="displayNameGroup" style="display: none;">
+                        <label for="authDisplayName">Full Name</label>
+                        <input type="text" id="authDisplayName" placeholder="Enter your full name">
+                    </div>
+
+                    <div id="authError" class="error-message"></div>
+
+                    <button type="submit" class="btn btn-primary" id="authSubmitBtn">
+                        <span id="btnText">Sign In</span>
+                        <span id="btnLoader" class="loader" style="display: none;"></span>
+                    </button>
+                </form>
+
+                <div class="auth-toggle">
+                    <p id="authToggleText">Don't have an account?</p>
+                    <a href="#" id="authToggleLink">Sign Up</a>
+                </div>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <div class="features">
+                    <h3>Why Use Seizure Tracker?</h3>
+                    <ul>
+                        <li>✅ Track seizure events with detailed information</li>
+                        <li>✅ Upload and store videos securely in the cloud</li>
+                        <li>✅ Access your data from any device</li>
+                        <li>✅ Store patient information safely</li>
+                        <li>✅ Export data for medical professionals</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>

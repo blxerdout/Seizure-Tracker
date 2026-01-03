@@ -88,11 +88,16 @@ class DatabaseHandler {
 
         return db.collection(this.seizuresCollection)
             .where('userId', '==', userId)
-            .orderBy('createdAt', 'desc')
             .onSnapshot((snapshot) => {
                 const seizures = [];
                 snapshot.forEach((doc) => {
-                    seizures.push({ id: doc.id, ...doc.data() });
+                    const data = doc.data();
+                    seizures.push({ id: doc.id, ...data });
+                });
+                // Sort by createdAt in JavaScript instead
+                seizures.sort((a, b) => {
+                    if (!a.createdAt || !b.createdAt) return 0;
+                    return b.createdAt.toMillis() - a.createdAt.toMillis();
                 });
                 callback(seizures);
             });

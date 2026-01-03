@@ -42,3 +42,4 @@ yarn-error.log*
 
 # Firebase Configuration (contains API keys)
 firebase-config.js
+node_modules

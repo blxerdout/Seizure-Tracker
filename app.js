@@ -5,6 +5,9 @@ class SeizureTracker {
         this.editingId = null;
         this.currentVideoFile = null;
         this.unsubscribeSeizures = null;
+        this.timerInterval = null;
+        this.timerStartTime = null;
+        this.timerRunning = false;
         this.initAuth();
     }
 
@@ -76,6 +79,10 @@ class SeizureTracker {
         exportBtn.addEventListener('click', () => this.exportData());
         videoInput.addEventListener('change', (e) => this.handleVideoSelection(e));
         removeVideoBtn.addEventListener('click', () => this.removeVideo());
+
+        // Timer controls
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        startTimerBtn.addEventListener('click', () => this.toggleTimer());
     }
 
     // Handle sign out
@@ -136,6 +143,63 @@ class SeizureTracker {
             alert('Error saving patient information: ' + result.error);
         }
     }
+
+    // Timer controls
+    toggleTimer() {
+        if (this.timerRunning) {
+            this.stopTimer();
+        } else {
+            this.startTimer();
+        }
+    }
+
+    startTimer() {
+        this.timerRunning = true;
+        this.timerStartTime = Date.now();
+        const timerBtn = document.getElementById('startTimerBtn');
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        timerBtn.textContent = '⏹ Stop Timer';
+        timerBtn.classList.add('stop');
+        timerDisplay.classList.add('active');
+        
+        this.timerInterval = setInterval(() => {
+            const elapsed = Date.now() - this.timerStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 100);
+    }
+
+    stopTimer() {
+        this.timerRunning = false;
+        clearInterval(this.timerInterval);
+        
+        const elapsed = Date.now() - this.timerStartTime;
+        const minutes = (elapsed / 60000).toFixed(2);
+        
+        const durationInput = document.getElementById('seizureDuration');
+        durationInput.value = minutes;
+        
+        const timerBtn = document.getElementById('startTimerBtn');
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        timerBtn.textContent = '▶ Start Timer';
+        timerBtn.classList.remove('stop');
+        timerDisplay.classList.remove('active');
+        timerDisplay.textContent = '00:00';
+        
+        this.timerStartTime = null;
+    }
+
+    resetTimer() {
+        if (this.timerRunning) {
+            this.stopTimer();
+        }
+        document.getElementById('timerDisplay').textContent = '00:00';
+        document.getElementById('seizureDuration').value = '';
+    }
+
 
     // Load seizures from Firebase
     loadSeizuresFromFirebase() {
@@ -386,6 +450,7 @@ class SeizureTracker {
         document.getElementById('seizureForm').reset();
         this.setDefaultDateTime();
         this.removeVideo();
+        this.resetTimer();
     }
 
     // Export data as JSON

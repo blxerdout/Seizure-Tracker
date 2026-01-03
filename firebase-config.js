@@ -1,12 +1,13 @@
 // Firebase Configuration
 // Replace these with your actual Firebase project credentials
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD5b3ZFO1DKvNOxwV-qltHve-eiNXLIVpg",
+    authDomain: "seizure-tracking-app.firebaseapp.com",
+    projectId: "seizure-tracking-app",
+    storageBucket: "seizure-tracking-app.firebasestorage.app",
+    messagingSenderId: "205059241434",
+    appId: "1:205059241434:web:8bdb38943206097ca8bce3",
+    measurementId: "G-XSQ89CDH33"
 };
 
 // Initialize Firebase
